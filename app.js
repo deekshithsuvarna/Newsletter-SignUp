@@ -3,6 +3,11 @@ const request = require("request");
 const mailchimp = require("@mailchimp/mailchimp_marketing");
 const https = require("https");
 
+require('dotenv').config({path : 'vars/.env'});
+const MAPI_KEY = process.env.API_KEY
+const MLIST_ID = process.env.LIST_ID
+const MAPI_SERVER = process.env.API_SERVER
+
 const app = express();
 
 app.use(express.static("public")); //specifies static folder for all of the files
@@ -36,41 +41,35 @@ app.post("/", function (req, res) {
 
     const jsonData = JSON.stringify(data);
 
-    const url = "https://us8.api.mailchimp.com/3.0/lists/ea3e36abb4";
+    const url = "https://" + MAPI_SERVER + ".api.mailchimp.com/3.0/lists/" + MLIST_ID;
 
     const options = {
         method: "POST",
-        auth: "bunnyboxer470:ad0519582e10531b4a27386e09cd39d3-us8"
+        auth: "bunnyboxer470:" + MAPI_KEY
     }
 
-    const request =  https.request(url, options, function (response) {
+    const request = https.request(url, options, function (response) {
 
-        if (response.statusCode === 200) {
-            res.sendFile( __dirname + "/success.html");
-        } else {
-            res.sendFile( __dirname + "/failure.html");
-        }
 
         response.on("data", function (data) {
             console.log(JSON.parse(data));
+
+            if (response.statusCode === 200) {
+                res.sendFile(__dirname + "/success.html");
+            } else {
+                res.sendFile(__dirname + "/failure.html");
+            }
         })
     })
 
-    // request.write(jsonData);
+    request.write(jsonData);
     request.end();
 });
 
-app.post("/failure", function (req,res) {
+app.post("/failure", function (req, res) {
     res.redirect("/");
 })
 
-// API Key
-// ad0519582e10531b4a27386e09cd39d3-us8
-
-// List Id
-// ea3e36abb4
-
-
-app.listen(3000, function () {
+app.listen(process.env.PORT || 3000, function () {
     console.log('Express app listening on port 3000');
 });
